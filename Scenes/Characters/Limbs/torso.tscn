@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://dgoqhuaqsm30g"]
 
 [ext_resource type="Script" uid="uid://q8ahgo1qrduq" path="res://Scripts/Player/torso.gd" id="1_fnhlf"]
+[ext_resource type="Material" uid="uid://ec0x4ulhiav1" path="res://Assets/Materials/Nameless/Torso.tres" id="3_fnhlf"]
 [ext_resource type="ArrayMesh" uid="uid://cj3i70i41oq7n" path="res://Assets/Robobotomy Art/3D/Character/Chest.res" id="4_v4eif"]
 [ext_resource type="ArrayMesh" uid="uid://dbhvhv7v6iag6" path="res://Assets/Robobotomy Art/3D/Character/Hips.res" id="5_p6b2g"]
 
@@ -129,6 +130,9 @@ radius = 0.12841797
 radius = 0.2783203
 height = 1.041271
 
+[sub_resource type="SphereShape3D" id="SphereShape3D_fnhlf"]
+radius = 1.0
+
 [node name="Torso" type="RigidBody3D" unique_id=381647224]
 collision_layer = 4099
 collision_mask = 2956
@@ -156,12 +160,14 @@ transform = Transform3D(100, 0, 0, 0, 100, 0, 0, 0, 100, 0, -2.053125, 0)
 mesh = ExtResource("4_v4eif")
 skin = SubResource("Skin_edeoo")
 skeleton = NodePath("")
+surface_material_override/0 = ExtResource("3_fnhlf")
 
 [node name="Hips" type="MeshInstance3D" parent="Chest" unique_id=1344780933]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2498349e-06, 0)
 mesh = ExtResource("5_p6b2g")
 skin = SubResource("Skin_hf8d4")
 skeleton = NodePath("")
+surface_material_override/0 = ExtResource("3_fnhlf")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1920081872]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.010934293, 0)
@@ -188,3 +194,10 @@ target_position = Vector3(0, -0.5, 0)
 collision_mask = 140
 debug_shape_custom_color = Color(1, 1, 0, 1)
 debug_shape_thickness = 5
+
+[node name="PickupArea" type="Area3D" parent="." unique_id=880206307]
+collision_layer = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PickupArea" unique_id=1502456332]
+shape = SubResource("SphereShape3D_fnhlf")
+debug_color = Color(0.9254902, 0.6627451, 0, 0.31764707)
