@@ -19,6 +19,5 @@ shader_parameter/diffuse_color = Color(1, 1, 1, 1)
 [resource]
 resource_name = "L_arm_Model_Fixed_UVs:Nameless_20_Updated_UVs:LArm"
 next_pass = SubResource("ShaderMaterial_kvksb")
-vertex_color_use_as_albedo = true
 albedo_texture = ExtResource("1_s3h8y")
 emission_enabled = true

@@ -4,8 +4,9 @@ extends SpotLight3D
 @export var cameraOrSource: bool 
 @export var camera : Camera3D 
 @export var source_array: Array[LightSource] = [] 
-@export var orbitTarget : Player # the player
+@export var orbitTarget : MeshInstance3D # the player
 @export var orbitDistance : float = 5.0 # default can be changed if we have problems
+@export var heightAdjuster: float = 0.0 #Adjusts the height of the orbit center
 @export var towardsSource: bool 
 @export var isworking: String 
 @export_range(0.01, 1.0) var speed: float = 0.1 
@@ -56,14 +57,16 @@ func _process(_delta: float) -> void:
 		
 	var obj_pos: Vector3 = orbitTarget.global_position 
 
-	if "selected_limb" in orbitTarget: #this area only starts working once the game begins, thanks to a bug godot has where we cannot pull these variables in the editor
+	if "selected_limb" in orbitTarget: 
 		if orbitTarget.selected_limb != null:
 			obj_pos = orbitTarget.selected_limb.global_position
 		else:
 			obj_pos = orbitTarget.torso.global_position
 	else:
 		obj_pos.y += 3.0
-		#print("target does not have property 'selected_limb', maybe you havent selected player?")
+	
+	obj_pos.y += heightAdjuster 
+		
 	var source_pos: Vector3 = Vector3.ZERO 
 	
 	if not cameraOrSource: 
@@ -74,13 +77,11 @@ func _process(_delta: float) -> void:
 	else: 
 		var needs_refresh: bool = false
 		
-		# Checking for deleted lights
 		for light in source_array:
 			if not is_instance_valid(light):
 				needs_refresh = true
 				break
 				
-		# Checking for new lights 
 		if get_tree().get_node_count() != _last_node_count:
 			needs_refresh = true
 			
@@ -92,7 +93,6 @@ func _process(_delta: float) -> void:
 		var closest_light: LightSource = null
 		var closest_distance: float = -1.0
 		
-		# Find the closest light
 		for light in source_array: 
 			if not is_instance_valid(light): 
 				continue 
@@ -101,7 +101,6 @@ func _process(_delta: float) -> void:
 				closest_distance = distance 
 				closest_light = light 
 				
-		# color and position
 		if is_instance_valid(closest_light):
 			# Use .get() to ask Godot for the color, bypassing the Nil cache error
 			var c = closest_light.get("color")
@@ -140,3 +139,4 @@ func _process(_delta: float) -> void:
 		
 	var target_transform = global_transform.looking_at(obj_pos, safe_up)
 	global_transform = global_transform.interpolate_with(target_transform, weight)
+	

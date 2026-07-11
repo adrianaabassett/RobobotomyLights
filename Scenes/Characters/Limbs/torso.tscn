@@ -1,10 +1,12 @@
 [gd_scene format=3 uid="uid://dgoqhuaqsm30g"]
 
 [ext_resource type="Script" uid="uid://q8ahgo1qrduq" path="res://Scripts/Player/torso.gd" id="1_fnhlf"]
-[ext_resource type="Material" uid="uid://ec0x4ulhiav1" path="res://Assets/Materials/Nameless/Torso.tres" id="3_fnhlf"]
 [ext_resource type="Texture2D" uid="uid://b61dwnpquqwgy" path="res://Assets/Robobotomy Art/2D/Character/Torso_SG_Base_color.png" id="3_v4eif"]
 [ext_resource type="ArrayMesh" uid="uid://cj3i70i41oq7n" path="res://Assets/Robobotomy Art/3D/Character/Chest.res" id="4_v4eif"]
 [ext_resource type="ArrayMesh" uid="uid://dbhvhv7v6iag6" path="res://Assets/Robobotomy Art/3D/Character/Hips.res" id="5_p6b2g"]
+[ext_resource type="PackedScene" uid="uid://bp5314ak5jwpm" path="res://Scenes/Tutorial/rotatingLight.tscn" id="6_edeoo"]
+[ext_resource type="Script" uid="uid://bledahrwikdls" path="res://Scripts/Lighting/RotatingLight.gd" id="7_3uavb"]
+[ext_resource type="Script" uid="uid://bljwnoiw32ksx" path="res://LightSource.gd" id="7_hf8d4"]
 
 [sub_resource type="Skin" id="Skin_edeoo"]
 resource_name = "Skin"
@@ -89,31 +91,25 @@ bind/24/pose = Transform3D(1.1784809e-05, 0.99996614, -0.008229741, 0.001024317,
 code = "shader_type spatial;
 render_mode blend_mix, depth_draw_opaque, cull_back, diffuse_burley, specular_schlick_ggx;
 
-// Cell shader WITH texture
+// Cell shader WITH texture by Adri
+
 group_uniforms Standard_Properties;
 uniform vec4 albedo : source_color = vec4(1.0);
 uniform sampler2D texture_albedo : source_color, filter_linear_mipmap, repeat_enable;
 uniform ivec2 albedo_texture_size;
 uniform float point_size : hint_range(0.1, 128.0, 0.1);
-
 uniform float roughness : hint_range(0.0, 1.0) = 1.0;
 uniform sampler2D texture_metallic : hint_default_white, filter_linear_mipmap, repeat_enable;
 uniform vec4 metallic_texture_channel;
 uniform sampler2D texture_roughness : hint_roughness_r, filter_linear_mipmap, repeat_enable;
-
 uniform float specular : hint_range(0.0, 1.0, 0.01) = 0.5;
 uniform float metallic : hint_range(0.0, 1.0, 0.01) = 0.0;
-
-uniform sampler2D texture_emission : source_color, hint_default_black, filter_linear_mipmap, repeat_enable;
-uniform vec4 emission : source_color = vec4(0.0, 0.0, 0.0, 1.0);
-uniform float emission_energy : hint_range(0.0, 100.0, 0.01) = 1.0;
-
 uniform vec3 uv1_scale = vec3(1.0);
 uniform vec3 uv1_offset = vec3(0.0);
 uniform vec3 uv2_scale = vec3(1.0);
 uniform vec3 uv2_offset = vec3(0.0);
 
-//the cell shader properties start here
+// cell shader stuff starts here
 group_uniforms Cel_Lighting;
 uniform bool use_stepped = true;
 uniform float steps = 1.0;
@@ -126,7 +122,6 @@ group_uniforms Normal_Map;
 uniform float normal_strength : hint_range(0.0, 1.0, 0.05) = 0.0;
 uniform sampler2D normal_texture : hint_normal, filter_linear_mipmap, repeat_enable; 
 
-//functions
 varying vec4 node_position;
 
 float fresnel(float amount, vec3 normal, vec3 view) {
@@ -138,19 +133,16 @@ float shape_value(float value, vec2 uv, vec2 screen_size){
 	return aspect;
 }
 
-// 
 void vertex() {
 	UV = UV * uv1_scale.xy + uv1_offset.xy;
-	
 	node_position = (PROJECTION_MATRIX * vec4(NODE_POSITION_VIEW, 1.0));
 }
 
 void fragment() {
 	vec2 base_uv = UV;
 
-
 	vec4 albedo_tex = texture(texture_albedo, base_uv);
-	albedo_tex *= COLOR; // Vertex Color Use as Albedo
+	albedo_tex *= COLOR; 
 	ALBEDO = albedo.rgb * albedo_tex.rgb;
 
 	vec4 normal_map = texture(normal_texture, base_uv);
@@ -164,11 +156,7 @@ void fragment() {
 	ROUGHNESS = roughness_tex * roughness;
 	
 	SPECULAR = specular;
-
-	vec3 emission_tex = texture(texture_emission, base_uv).rgb;
-	EMISSION = (emission.rgb + emission_tex) * emission_energy;
 }
-
 void light () {
 	float ndotl = clamp(dot(NORMAL, LIGHT), 0.0, 1.0) * ATTENUATION;
 	float light = ndotl;
@@ -181,7 +169,6 @@ void light () {
 		light_factor = smoothstep(0.5 - step_smoothness, 0.5 + step_smoothness, light_factor);
 		light = (step_base + light_factor) / steps;
 	}
-
 	vec3 diffuse = vec3(light) * (LIGHT_COLOR / PI);
 	diffuse = (shadow_tint.rgb * (1.0 - (light)) * shadow_tint_amount) + diffuse * light;
 	
@@ -205,8 +192,6 @@ shader_parameter/roughness = 1.0
 shader_parameter/metallic_texture_channel = Vector4(1, 0, 0, 0)
 shader_parameter/specular = 0.5
 shader_parameter/metallic = 0.0
-shader_parameter/emission = Color(0, 0, 0, 1)
-shader_parameter/emission_energy = 1.0
 shader_parameter/uv1_scale = Vector3(1, 1, 1)
 shader_parameter/uv1_offset = Vector3(0, 0, 0)
 shader_parameter/uv2_scale = Vector3(1, 1, 1)
@@ -215,7 +200,7 @@ shader_parameter/use_stepped = true
 shader_parameter/steps = 1.0
 shader_parameter/step_smoothness = 0.0
 shader_parameter/shadow_tint = Color(0, 0, 0, 1)
-shader_parameter/shadow_tint_amount = 0.4
+shader_parameter/shadow_tint_amount = 0.0
 shader_parameter/diffuse_color = Color(1, 1, 1, 1)
 shader_parameter/normal_strength = 0.0
 
@@ -257,6 +242,13 @@ bind/9/pose = Transform3D(1.1784809e-05, 0.99996614, -0.008229741, 0.001024317, 
 radius = 0.25683594
 height = 0.99316406
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_edeoo"]
+shading_mode = 0
+albedo_color = Color(0, 0, 1, 1)
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_hf8d4"]
+height = 1.0
+
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_i01jx"]
 height = 0.9765625
 radius = 0.12841797
@@ -267,6 +259,12 @@ height = 1.041271
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_fnhlf"]
 radius = 1.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3uavb"]
+shading_mode = 0
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_4lse1"]
+height = 1.0
 
 [node name="Torso" type="RigidBody3D" unique_id=381647224]
 collision_layer = 4099
@@ -292,6 +290,7 @@ aabb = AABB(-0.31877425, -0.6121777, -0.45757043, 0.6375485, 1.2243555, 0.915140
 
 [node name="Chest" type="MeshInstance3D" parent="." unique_id=512127986]
 transform = Transform3D(100, 0, 0, 0, 100, 0, 0, 0, 100, 0, -2.053125, 0)
+layers = 513
 mesh = ExtResource("4_v4eif")
 skin = SubResource("Skin_edeoo")
 skeleton = NodePath("")
@@ -302,11 +301,19 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2498349e-06, 0)
 mesh = ExtResource("5_p6b2g")
 skin = SubResource("Skin_hf8d4")
 skeleton = NodePath("")
-surface_material_override/0 = ExtResource("3_fnhlf")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1920081872]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.010934293, 0)
 shape = SubResource("CapsuleShape3D_8y70x")
+
+[node name="LightSource" type="MeshInstance3D" parent="CollisionShape3D" unique_id=2125496310]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 3.7887378)
+material_override = SubResource("StandardMaterial3D_edeoo")
+cast_shadow = 0
+mesh = SubResource("CapsuleMesh_hf8d4")
+script = ExtResource("7_hf8d4")
+color = Color(0, 0, 1, 1)
+metadata/_custom_type_script = "uid://bljwnoiw32ksx"
 
 [node name="StableCollider" type="CollisionShape3D" parent="." unique_id=1337400884]
 unique_name_in_owner = true
@@ -334,5 +341,33 @@ debug_shape_thickness = 5
 collision_layer = 0
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="PickupArea" unique_id=1502456332]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.28852367)
 shape = SubResource("SphereShape3D_fnhlf")
 debug_color = Color(0.9254902, 0.6627451, 0, 0.31764707)
+
+[node name="SpotLight3D" parent="." unique_id=243402201 node_paths=PackedStringArray("source_array", "orbitTarget") instance=ExtResource("6_edeoo")]
+transform = Transform3D(0.90458024, 0.07727489, 0.41924128, 0, 0.98343384, -0.18126732, -0.42630348, 0.16397083, 0.8895948, 0.41924134, -0.23439227, 0.88959485)
+layers = 512
+light_energy = 0.795
+light_indirect_energy = 0.0
+light_volumetric_fog_energy = 0.0
+light_size = 0.125
+spot_attenuation = 2.39
+spot_angle = 62.28
+script = ExtResource("7_3uavb")
+cameraOrSource = true
+source_array = [NodePath("../CollisionShape3D/LightSource"), NodePath("../LightSource")]
+orbitTarget = NodePath("../Chest")
+orbitDistance = 1.0
+heightAdjuster = -1.0
+towardsSource = true
+speed = 0.31
+
+[node name="LightSource" type="MeshInstance3D" parent="." unique_id=331089299]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.9955113, 0.37730432, -2.1123912)
+layers = 524288
+material_override = SubResource("StandardMaterial3D_3uavb")
+cast_shadow = 0
+mesh = SubResource("CapsuleMesh_4lse1")
+script = ExtResource("7_hf8d4")
+metadata/_custom_type_script = "uid://bljwnoiw32ksx"
