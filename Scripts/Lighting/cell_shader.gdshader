@@ -1,4 +1,5 @@
 shader_type spatial;
+//older shader
 render_mode diffuse_lambert, specular_disabled;
 
 uniform sampler2D main_texture : source_color, hint_default_white;

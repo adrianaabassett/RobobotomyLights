@@ -1,9 +1,24 @@
 [gd_resource type="StandardMaterial3D" format=3 uid="uid://ec0x4ulhiav1"]
 
 [ext_resource type="Texture2D" uid="uid://b61dwnpquqwgy" path="res://Assets/Robobotomy Art/2D/Character/Torso_SG_Base_color.png" id="1_s3h8y"]
+[ext_resource type="Shader" uid="uid://w8u6tc0q3mmt" path="res://Assets/Materials/Shaders/adricell.gdshader" id="2_6srf1"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_kvksb"]
+render_priority = 0
+shader = ExtResource("2_6srf1")
+shader_parameter/albedo_color = Color(1, 1, 1, 1)
+shader_parameter/use_stepped = true
+shader_parameter/steps = 1.0
+shader_parameter/step_smoothness = 0.0
+shader_parameter/shadow_tint = Color(0, 0, 0, 1)
+shader_parameter/shadow_tint_amount = 0.4
+shader_parameter/specular = 0.0
+shader_parameter/normal_strength = 0.0
+shader_parameter/diffuse_color = Color(1, 1, 1, 1)
 
 [resource]
 resource_name = "L_arm_Model_Fixed_UVs:Nameless_20_Updated_UVs:LArm"
+next_pass = SubResource("ShaderMaterial_kvksb")
 vertex_color_use_as_albedo = true
 albedo_texture = ExtResource("1_s3h8y")
 emission_enabled = true
